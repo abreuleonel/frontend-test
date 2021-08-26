@@ -83,16 +83,15 @@ export default class UrlProcessorFluentAPI {
 
         this.#qs = ''
         let options = Object.keys(this.#opts.query);
+
+        const filteredQuery: any = Object.fromEntries(
+                Object.entries(this.#opts.query)
+                    .filter((item) => (item[1] != null && !Number.isNaN(item[1]) 
+                        && typeof item[1] != undefined)));        
         
+        options = Object.keys(filteredQuery)
         for (let i = 0; i < options.length; i++) {
-            let value = this.#opts.query[options[i]]
-            if (value == null || Number.isNaN(value) || typeof value == undefined) {
-                delete this.#opts.query[options[i]]
-            }
-        }
-        options = Object.keys(this.#opts.query)
-        for (let i = 0; i < options.length; i++) {
-            let value = this.#opts.query[options[i]]
+            let value = filteredQuery[options[i]]
             let name = this.#opts.queryStringParser
             ? this.#opts.queryStringParser(options[i])
             : options[i]
