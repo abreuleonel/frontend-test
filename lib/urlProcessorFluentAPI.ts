@@ -4,7 +4,7 @@ import kebabCase from 'lodash/kebabCase';
 export default class UrlProcessorFluentAPI {
     #opts;
     #url;
-    #qs: string | null;
+    #qs: any;
     #endpoint;
 
     constructor(opts: Options) {
@@ -82,35 +82,39 @@ export default class UrlProcessorFluentAPI {
             return this;
 
         this.#qs = ''
-        let options = Object.keys(this.#opts.query);
-
-        const filteredQuery: any = Object.fromEntries(
-                Object.entries(this.#opts.query)
-                    .filter((item) => (item[1] != null && !Number.isNaN(item[1]) 
-                        && typeof item[1] != undefined)));        
         
-        options = Object.keys(filteredQuery)
-        for (let i = 0; i < options.length; i++) {
-            let value = filteredQuery[options[i]]
+        const queryAsArray = Object.entries(this.#opts.query);
+        
+        const qq = queryAsArray.reduce((acc: any, cur: any, currentIndex) => {
+            let add = "";
+            if(cur[1] == null 
+                || Number.isNaN(cur[1]) 
+                || typeof cur[1] == undefined)
+                return acc;
+
+            let value = cur[1];
+
             let name = this.#opts.queryStringParser
-            ? this.#opts.queryStringParser(options[i])
-            : options[i]
-            if (
-            (typeof value == 'string' ||
-                typeof value == 'number' ||
-                typeof value == 'boolean') &&
-            !Number.isNaN(value)
-            ) {
-            this.#qs += name + '=' + value
-            } else {
-            value = value as Array<any>
-            for (let u = 0; u < value.length; u++) {
-                this.#qs += name + '[]=' + value[u]
-                if (u < value.length - 1) this.#qs += '&'
+            ? this.#opts.queryStringParser(cur[0])
+            : cur[0];
+            
+            if(Array.isArray(value)){
+                value = value as Array<any>
+                for (let u = 0; u < value.length; u++) {
+                    add += name + '[]=' + value[u]
+                    if (u < value.length - 1) add += '&'
+                }    
             }
-            }
-            if (i < options.length - 1) this.#qs += '&'
-        }
+            else{
+                add = name + '=' + value    
+            }            
+
+            if (currentIndex < queryAsArray.length - 1) add += '&'
+
+            return acc + add;
+        }, this.#qs);
+
+        this.#qs = qq;
 
         return this;
     }
