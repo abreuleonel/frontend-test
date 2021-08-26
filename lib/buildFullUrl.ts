@@ -5,6 +5,7 @@ import type { Options } from '../types'
 export default function buildFullUrl(opts: Options) {
   let url: string = opts.baseUrl || ''
   let endpoint = kebabCase(opts.name)
+
   let qs = null
   if (opts.urlParser) {
     endpoint = opts.urlParser(opts.name || '')
@@ -17,7 +18,7 @@ export default function buildFullUrl(opts: Options) {
     endpoint += opts.id
   }
   if (opts.customPath) {
-    endpoint = opts.customPath
+    endpoint = (!opts.id) ? opts.customPath : opts.customPath.replace(/:\w+/, opts.id.toString());
   }
   endpoint = endpoint.split('//').join('/')
   if (endpoint.indexOf('/') == 0) {
