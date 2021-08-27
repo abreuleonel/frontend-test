@@ -14,67 +14,40 @@ export default class UrlProcessorFluentAPI {
         this.#qs = null;
     }
 
-    hasOptsUrlParser() {
-        if (!this.#opts.urlParser)
-            return this;
+    formatEndpoint() {
+        this.#hasOptsUrlParser()
+        this.#hasOptsPath()
+        this.#hasOptsIdButNotCustomPath()
+        this.#hasOptsIdAndCustomPath()
 
-        this.#endpoint = this.#opts.urlParser(this.#opts.name || '')
-
-        return this;
-    }
-
-    hasOptsPath() {
-        if(!this.#opts.path)
-            return this;
-        
-        this.#endpoint = this.#opts.path
-        return this;
-    }
-
-    hasOptsIdButNotCustomPath() {
-        if (!this.#opts.id || this.#opts.customPath)
-            return this;
-
-        this.#endpoint += '/'
-        this.#endpoint += this.#opts.id
-        
-        return this;
-    }
-
-    hasOptsIdAndCustomPath() {
-        if(!this.#opts.customPath)
-            return this;
-
-        this.#endpoint = (!this.#opts.id) ? this.#opts.customPath : this.#opts.customPath.replace(/:\w+/, this.#opts.id.toString());
-
-        return this;
-    }
-
-    splitEndpointSlashes() {
         this.#endpoint = this.#endpoint.replace(/\/\//g, '/');
-        return this;
-    }
-
-    endpointBeginsWithSlash() {
         this.#endpoint = this.#endpoint.startsWith('/') ? this.#endpoint.substring(1) : this.#endpoint;
 
         return this;
     }
 
-    urlLastIndexOfDifferentFromMinusOne() {
+    formatUrl() {
         this.#url = (!this.#url.endsWith('/')) ? this.#url += '/' : this.#url;
-
-        return this;
-    }
-
-    joinUrlWithEndpoint() {
         this.#url += this.#endpoint;
+        this.#url = (this.#url.endsWith('/')) ? this.#url.slice(0, -1) : this.#url;
+
         return this;
     }
 
-    hasOptsQuery() {
+    formatQuery() {
+        this.#hasOptsQuery();
+
+        if (this.#qs != null) {
+            this.#url += '?' + this.#qs
+        }
+
+        return this;
+    }
+
+
+    #hasOptsQuery = () => {
         if(!this.#opts.query)
-            return this;
+            return;
 
         this.#qs = ''
         
@@ -113,25 +86,39 @@ export default class UrlProcessorFluentAPI {
 
         this.#qs = qq;
 
-        return this;
+        return;
     }
 
-    urlSlashNotLastCharacter() {
-        this.#url = (this.#url.endsWith('/')) ? this.#url.substring(0, this.#url.length -1) : this.#url;
+    #hasOptsUrlParser = () => {
+        if (!this.#opts.urlParser)
+            return;
+
+        this.#endpoint = this.#opts.urlParser(this.#opts.name || '')
+    }
+
+    #hasOptsPath = () => {
+        if(!this.#opts.path)
+            return;
         
-        return this;
+        this.#endpoint = this.#opts.path
     }
 
-    hasntQs() {
-        if (this.#qs != null) {
-            this.#url += '?' + this.#qs
-        }
+    #hasOptsIdButNotCustomPath = () => {
+        if (!this.#opts.id || this.#opts.customPath)
+            return;
 
-        return this;
+        this.#endpoint += '/'
+        this.#endpoint += this.#opts.id        
+    }
+
+    #hasOptsIdAndCustomPath = () => {
+        if(!this.#opts.customPath)
+            return;
+
+        this.#endpoint = (!this.#opts.id) ? this.#opts.customPath : this.#opts.customPath.replace(/:\w+/, this.#opts.id.toString());
     }
 
     build() {
-//        this.#url = (this.#url.endsWith('&')) ? this.#url.substring(0, this.#url.length -1) : this.#url;
         return this.#url;
     }
 }
