@@ -51,15 +51,12 @@ export default class UrlProcessorFluentAPI {
 
         this.#qs = ''
         
-        const queryAsArray = Object.entries(this.#opts.query);     
-
-        const filteredArray = queryAsArray.filter((value) => {
+        this.#qs = Object.entries(this.#opts.query).filter((value) => {
             return (value[1] != null 
                 && !Number.isNaN(value[1])
                 && typeof value[1] != undefined)
         })
-        
-        const qq = filteredArray.reduce((acc: any, cur: any, currentIndex) => {
+        .reduce((acc: any, cur: any, currentIndex, fArray) => {
             let add = "";                               
 
             let value = cur[1];
@@ -78,13 +75,11 @@ export default class UrlProcessorFluentAPI {
                 add = name + '=' + value    
             }            
             
-            if (currentIndex < filteredArray.length - 1)
+            if (currentIndex < fArray.length - 1)
                 add += `&`
 
             return acc + add;
         }, this.#qs);
-
-        this.#qs = qq;
 
         return;
     }
