@@ -51,23 +51,18 @@ export default class UrlProcessorFluentAPI {
     }
 
     splitEndpointSlashes() {
-        this.#endpoint = this.#endpoint.split('//').join('/')
+        this.#endpoint = this.#endpoint.replace(/\/\//g, '/');
         return this;
     }
 
     endpointBeginsWithSlash() {
-        if(this.#endpoint.indexOf('/') !== 0)
-            return this;
-
-        let arrayEndpoint = this.#endpoint.split('')
-        arrayEndpoint.shift()
-        this.#endpoint = arrayEndpoint.join('')
+        this.#endpoint = this.#endpoint.startsWith('/') ? this.#endpoint.substring(1) : this.#endpoint;
 
         return this;
     }
 
     urlLastIndexOfDifferentFromMinusOne() {
-        (this.#endpoint && this.#url.lastIndexOf('/') != this.#url.length - 1) ? this.#url += '/' : this.#url;
+        this.#url = (!this.#url.endsWith('/')) ? this.#url += '/' : this.#url;
 
         return this;
     }
@@ -83,33 +78,35 @@ export default class UrlProcessorFluentAPI {
 
         this.#qs = ''
         
-        const queryAsArray = Object.entries(this.#opts.query);
+        const queryAsArray = Object.entries(this.#opts.query);     
+
+        const filteredArray = queryAsArray.filter((value) => {
+            return (value[1] != null 
+                && !Number.isNaN(value[1])
+                && typeof value[1] != undefined)
+        })
         
-        const qq = queryAsArray.reduce((acc: any, cur: any, currentIndex) => {
-            let add = "";
-            if(cur[1] == null 
-                || Number.isNaN(cur[1]) 
-                || typeof cur[1] == undefined)
-                return acc;
+        const qq = filteredArray.reduce((acc: any, cur: any, currentIndex) => {
+            let add = "";                               
 
             let value = cur[1];
-
             let name = this.#opts.queryStringParser
             ? this.#opts.queryStringParser(cur[0])
             : cur[0];
             
-            if(Array.isArray(value)){
-                value = value as Array<any>
-                for (let u = 0; u < value.length; u++) {
-                    add += name + '[]=' + value[u]
-                    if (u < value.length - 1) add += '&'
-                }    
+            if(Array.isArray(value)){                
+                add = value.reduce((accArray, curArray, currentArrayIndex) => {
+                    let addArray = name + '[]=' + curArray;
+                    if (currentArrayIndex < value.length - 1) addArray += '&'
+                    return accArray + addArray;
+                }, add);                
             }
             else{
                 add = name + '=' + value    
             }            
-
-            if (currentIndex < queryAsArray.length - 1) add += '&'
+            
+            if (currentIndex < filteredArray.length - 1)
+                add += `&`
 
             return acc + add;
         }, this.#qs);
@@ -120,12 +117,8 @@ export default class UrlProcessorFluentAPI {
     }
 
     urlSlashNotLastCharacter() {
-        if (this.#url.lastIndexOf('/') == this.#url.length - 1) {
-            let arrayUrl = this.#url.split('')
-            arrayUrl.pop()
-            this.#url = arrayUrl.join('')
-        }
-
+        this.#url = (this.#url.endsWith('/')) ? this.#url.substring(0, this.#url.length -1) : this.#url;
+        
         return this;
     }
 
@@ -137,13 +130,8 @@ export default class UrlProcessorFluentAPI {
         return this;
     }
 
-    printUrlAndEndpoint() {
-        console.log("url", this.#url, "endpoint", this.#endpoint);
-        
-        return this;
-    }
-
     build() {
+//        this.#url = (this.#url.endsWith('&')) ? this.#url.substring(0, this.#url.length -1) : this.#url;
         return this.#url;
     }
 }
